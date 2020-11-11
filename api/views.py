@@ -5,10 +5,10 @@ from django.db.models import Count, F, Subquery, OuterRef, Value
 from django.db.models.functions import Concat
 from django.http import HttpResponse
 from django.shortcuts import redirect
-from rest_framework import viewsets
+from rest_framework import viewsets, mixins
 
 from api.models import Course, Student, CourseParticipant
-from api.serializers import CourseSerializer, StudentSerializer, CourseParticipantSerializer
+from api.serializers import CourseSerializer, CourseParticipantSerializer
 
 
 def index(request):
@@ -41,14 +41,14 @@ def student_report_qs():
     )
 
 
-class CoursesViewset(viewsets.ModelViewSet):
+class CoursesViewset(mixins.ListModelMixin,
+                     mixins.RetrieveModelMixin,
+                     mixins.UpdateModelMixin,
+                     mixins.DestroyModelMixin,
+                     viewsets.GenericViewSet):
     queryset = Course.objects.all().annotate(students_amount=Count(F('courseparticipant__id')))
     serializer_class = CourseSerializer
 
-
-class StudentsViewset(viewsets.ModelViewSet):
-    queryset = Student.objects.all()
-    serializer_class = StudentSerializer
 
 
 class CourseParticipantsViewset(viewsets.ModelViewSet):

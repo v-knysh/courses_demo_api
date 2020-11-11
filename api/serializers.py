@@ -16,12 +16,6 @@ class CourseSerializer(serializers.ModelSerializer):
         return data
 
 
-class StudentSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Student
-        fields = '__all__'
-
-
 class CourseParticipantSerializer(serializers.ModelSerializer):
     class Meta:
         model = CourseParticipant
