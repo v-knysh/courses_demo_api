@@ -1,7 +1,7 @@
 # Create your views here.
 import csv
 
-from django.db.models import Count, F, Subquery, OuterRef
+from django.db.models import Count, F, Subquery, OuterRef, Value
 from django.db.models.functions import Concat
 from django.http import HttpResponse
 from django.shortcuts import redirect
@@ -18,16 +18,7 @@ def index(request):
 def report(request):
     report_columns = ['full_name', 'courses_amount', 'completed_amount']
 
-    students_data = Student.objects.annotate(
-        full_name=Concat('first_name', 'last_name'),
-        courses_amount=Count(F('courseparticipant__id')),
-        completed_amount=Count(Subquery(
-            Course.objects.filter(
-                courseparticipant__student_id=OuterRef('id'),
-                courseparticipant__completed=True
-            ).values('id')
-        )),
-    ).values(*report_columns)
+    students_data = student_report_qs().values(*report_columns)
     response = HttpResponse(content_type='text/csv')
     response['Content-Disposition'] = 'attachment; filename="report.csv"'
     writer = csv.DictWriter(response, fieldnames=report_columns)
@@ -35,6 +26,19 @@ def report(request):
     for row in students_data:
         writer.writerow(row)
     return response
+
+
+def student_report_qs():
+    return Student.objects.annotate(
+        full_name=Concat('first_name', Value(" "), 'last_name'),
+        completed_amount=Subquery(
+            Student.objects.filter(
+                id=OuterRef('id'),
+                courseparticipant__completed=True
+            ).annotate(c=Count('courseparticipant')).values('c')
+        ),
+        courses_amount=Count(F('courseparticipant__id')),
+    )
 
 
 class CoursesViewset(viewsets.ModelViewSet):
