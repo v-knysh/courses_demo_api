@@ -10,6 +10,11 @@ class CourseSerializer(serializers.ModelSerializer):
         model = Course
         fields = '__all__'
 
+    def validate(self, data):
+        if data['start_date'] > data['end_date']:
+            raise serializers.ValidationError({"end_date": "finish must occur after start"})
+        return data
+
 
 class StudentSerializer(serializers.ModelSerializer):
     class Meta:

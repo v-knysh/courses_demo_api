@@ -1,6 +1,7 @@
 from django.db import models
 
 # Create your models here.
+from django.db.models import F, Q
 
 
 class Course(models.Model):
@@ -8,6 +9,11 @@ class Course(models.Model):
     description = models.CharField(max_length=100)
     start_date = models.DateField()
     end_date = models.DateField()
+
+    class Meta:
+        constraints = [
+            models.CheckConstraint(check=Q(start_date__lte=F('end_date')), name='start_date_lte_end_date'),
+        ]
 
 
 class Student(models.Model):
